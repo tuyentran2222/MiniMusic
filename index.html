@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Project</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://kit.fontawesome.com/383c0b5f98.js" crossorigin="anonymous"></script>
+    <link href='https://unpkg.com/boxicons@2.1.2/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    
+    <div class="wrapper">
+        <div class="top-bar">
+            <i class='bx bx-chevron-down'></i>
+            <span class="top-bar__title">Đang Phát</span>
+            <i class='bx bx-dots-horizontal-rounded' ></i>
+        </div>
+        <div class="volume">
+            <div class="volume__container">
+                <div class="volume__current"></div>
+            </div>
+            <i class='bx bx-volume-full volume__icon' volume-data ='large'></i>
+        </div>
+        <div class="image__container">
+            <img src="./images/music1.jpg" alt="" class="music__img">
+        </div>
+
+        <div class="song__details">
+            <p class="song__name">Chạy về nơi phía anh</p>
+            <p class="song__artist">Khắc Việt</p>
+        </div>
+
+        <div class="progress__container">
+            <div class="progress__bar">
+                <audio>
+                    <source src="./songs/ChayVeNoiPhiaAnh-KhacViet-7129688.mp3" type="audio/mp3">
+                  Your browser does not support the audio element.
+                </audio>
+                <audio src="./songs/ChayVeNoiPhiaAnh-KhacViet-7129688.mp3" id="audio"></audio>
+            </div>
+            <div class="progress__time">
+                <span class="progress__current">0:00</span>
+                <span class="progress__end">3:00</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <i class="fa-solid fa-repeat " id="repeat-plist" button-value="repeat"></i>
+            <i class='bx bx-skip-previous' id="prev"></i>
+            <span>
+                <i class='bx bx-play play-pause__btn'></i>
+            </span>
+            
+            <i class='bx bx-skip-next' id="next" ></i>
+            <i class='bx bxs-playlist' id="controls__more" ></i>
+        </div>
+
+        <div class="music__list">
+            <div class="list__header">
+              <div>
+                <i class='bx bx-list-ul'></i>
+                <span>Danh sách nhạc</span>
+              </div>
+              <i class='bx bx-x' class="close__btn" id="close"></i>
+            </div>
+            <ul>
+              <!-- here li list are coming from js -->
+            </ul>
+          </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>

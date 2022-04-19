@@ -1,39 +1,52 @@
+const zingChat = 'https://apihash.herokuapp.com/getChartHome';
+
+function start() {
+    getZingChat(renderSongs);
+}
+
+function getZingChat(callback) {
+    fetch(zingChat).
+        then(response => response.json()).
+        then(callback);
+}
+
+function getSong(id, i,  callback) {
+    fetch(`https://apihash.herokuapp.com/getSong/${id}`)
+    .then((response) => (response.json()))
+    .then((response) => {
+        if (response.err == 0) {
+            allMusic[i].src = response.data[128];
+            let liTag = `<li li-index="${i + 1}">
+                    <div class="row">
+                    <span>${allMusic[i].title}</span>
+                    <p>${allMusic[i].artistsNames}</p>
+                    </div>
+                    <span id="${allMusic[i].encodeId}" class="audio-duration">3:40</span>
+                    <audio class="${allMusic[i].encodeId}" src="${response.data[128]}"></audio>
+                </li>`;
+            ulTag.insertAdjacentHTML("beforeend", liTag); //inserting the li inside ul tag
+            
+            let liAudioDurationTag = ulTag.querySelector(`#${allMusic[i].encodeId}`);
+            let liAudioTag = ulTag.querySelector(`.${allMusic[i].encodeId}`);
+            liAudioTag.addEventListener("loadeddata", ()=>{
+            let duration = liAudioTag.duration;
+            let totalMin = Math.floor(duration / 60);
+            let totalSec = Math.floor(duration % 60);
+            if(totalSec < 10) totalSec = `0${totalSec}`;
+            liAudioDurationTag.innerText = `${totalMin}:${totalSec}`; //passing total duation of song
+            liAudioDurationTag.setAttribute("t-duration", `${totalMin}:${totalSec}`); //adding t-duration attribute with total duration value
+            });
+        }
+ 
+    });
+}
+
 let allMusic = [
     {
       name: "Chạy về nơi phía anh",
       artist: "Khắc Việt",
       img: "music1",
       src: "ChayVeNoiPhiaAnh-KhacViet-7129688"
-    },
-    {
-      name: "Câu hẹn câu thề",
-      artist: "Đình Dũng",
-      img: "music2",
-      src: "CauHenCauThe-DinhDung-6994741"
-    },
-    {
-      name: "Có em đây",
-      artist: "Như Việt",
-      img: "music3",
-      src: "CoEmDay-NhuViet-7126614"
-    },
-    {
-      name: "Đế Vương",
-      artist: "Đình Dũng",
-      img: "music4",
-      src: "DeVuong-DinhDungACV-7121634"
-    },
-    {
-      name: "Ước mơ của mẹ",
-      artist: "Quân AP",
-      img: "music5",
-      src: "UocMoCuaMe1-QuanAP-7127567"
-    },
-    {
-      name: "Váy cưới",
-      artist: "Trung Tự",
-      img: "music6",
-      src: "VayCuoiTrungTuProgressiveHouseRemix-TrungTu-4955768"
     }
 ]
 
@@ -49,6 +62,7 @@ const nextBtn = wrapper.querySelector('#next');
 
 const progressContainer = wrapper.querySelector('.progress__container');
 const progressBar = wrapper.querySelector('.progress__bar');
+const tooltip = wrapper.querySelector('.tooltip');
 
 const volumeContainer = wrapper.querySelector('.volume__container');
 const volumeCurrent = wrapper.querySelector('.volume__current');
@@ -62,22 +76,41 @@ const musicList = wrapper.querySelector('.music__list');
 const closeMoreMusic  = wrapper.querySelector('#close');
 let musicIndex = Math.floor((Math.random() * allMusic.length) + 1);
 isMusicPaused = true;
-let currVolume = localStorage.getItem('volumeCurrent') ? localStorage.getItem('volumeCurrent') : 60;
-let label = getVolumeData(currVolume);
 
-volumeIcon.setAttribute('volume-data', label);
+//set default volume
+let currVolume = localStorage.getItem('volumeCurrent') ? localStorage.getItem('volumeCurrent') : volumeContainer.clientHeight;
+changeVolumeIcon(currVolume/ volumeContainer.clientHeight )
 volumeCurrent.style.height = currVolume +'px';
-window.addEventListener("load", ()=>{
+
+const ulTag = wrapper.querySelector("ul");
+
+start();
+function renderSongs(data) {
+    allMusic = data.data.RTChart.items
+    // let create li tags according to array length for list
+    for (let i = 0; i < allMusic.length; i++) {
+        getSong(allMusic[i].encodeId, i , renderSong);
+    }
+}
+
+function renderSong() {
+
+}
+window.addEventListener("loaded", ()=>{
+    console.log(musicIndex)
     loadMusic(musicIndex);
     playMusic();
     playingSong(); 
 });
 
 function loadMusic(indexNumb){
-    musicName.innerText = allMusic[indexNumb - 1].name;
-    musicArtist.innerText = allMusic[indexNumb - 1].artist;
-    musicImg.src = `images/${allMusic[indexNumb - 1].img}.jpg`;
-    mainAudio.src = `songs/${allMusic[indexNumb - 1].src}.mp3`;
+    clearInterval(intervalAction);
+    musicName.innerText = allMusic[indexNumb - 1].title;
+    musicArtist.innerText = allMusic[indexNumb - 1].artistsNames;
+    // musicImg.src = `images/${allMusic[indexNumb - 1].img}.jpg`;
+    // mainAudio.src = `songs/${allMusic[indexNumb - 1].src}.mp3`;
+    musicImg.src = allMusic[indexNumb - 1].thumbnailM;
+    mainAudio.src = allMusic[indexNumb - 1].src;
 }
 
 let intervalAction;
@@ -92,7 +125,7 @@ function playMusic(){
         //if (currentRotateNumber == '360') currentRotateNumber = '0';
         nextRotateNumber = parseInt(currentRotateNumber) + 3 ;
         nextRotate = nextRotateNumber + 'deg';
-        console.log(nextRotate)
+        
         musicImg.style.setProperty('--deg', nextRotate);
     },100)
 
@@ -135,7 +168,7 @@ playPauseBtn.addEventListener('click', () => {
 prevBtn.addEventListener("click", ()=>{
     prevMusic();
 });
-  //next music button event
+
 nextBtn.addEventListener("click", ()=>{
     nextMusic();
 });
@@ -181,31 +214,6 @@ closeMoreMusic.addEventListener('click', ()=>{
     musicList.classList.toggle("show")
 })
 
-
-const ulTag = wrapper.querySelector("ul");
-// let create li tags according to array length for list
-for (let i = 0; i < allMusic.length; i++) {
-    let liTag = `<li li-index="${i + 1}">
-                    <div class="row">
-                    <span>${allMusic[i].name}</span>
-                    <p>${allMusic[i].artist}</p>
-                    </div>
-                    <span id="${allMusic[i].src}" class="audio-duration">3:40</span>
-                    <audio class="${allMusic[i].src}" src="songs/${allMusic[i].src}.mp3"></audio>
-                </li>`;
-    ulTag.insertAdjacentHTML("beforeend", liTag); //inserting the li inside ul tag
-    let liAudioDuartionTag = ulTag.querySelector(`#${allMusic[i].src}`);
-    let liAudioTag = ulTag.querySelector(`.${allMusic[i].src}`);
-    liAudioTag.addEventListener("loadeddata", ()=>{
-        let duration = liAudioTag.duration;
-        let totalMin = Math.floor(duration / 60);
-        let totalSec = Math.floor(duration % 60);
-        if(totalSec < 10) totalSec = `0${totalSec}`;
-        liAudioDuartionTag.innerText = `${totalMin}:${totalSec}`; //passing total duation of song
-        liAudioDuartionTag.setAttribute("t-duration", `${totalMin}:${totalSec}`); //adding t-duration attribute with total duration value
-    });
-}
-
 function playingSong() {
     const allLiTag = ulTag.querySelectorAll("li");
     allLiTag.forEach(liTag => {
@@ -226,6 +234,7 @@ function playingSong() {
 }
 
 function clicked(element){
+    console.log(element);
     clearInterval(intervalAction);
     let getLiIndex = element.getAttribute("li-index");
     musicIndex = getLiIndex; //updating current song index with clicked li index
@@ -254,6 +263,7 @@ repeatBtn.addEventListener("click", () =>{
     }
 })
 
+//process next song when current song end
 mainAudio.addEventListener('ended', ()=> {
     let currentRepeatBtnValue = repeatBtn.getAttribute('button-value');
 
@@ -285,67 +295,28 @@ volumeContainer.addEventListener('click', (e)=> {
     let volumeHeight = volumeContainer.clientHeight;
     let clickOffsetY = e.offsetY;
     let currentVolume;
-    if (e.target == volumeContainer) {
-        currentVolume = (volumeHeight - clickOffsetY);
-    }
-    else {
-        currentVolume = (volumeCurrent.clientHeight - clickOffsetY);
-    }
+    (e.target == volumeContainer) ? currentVolume = (volumeHeight - clickOffsetY) : currentVolume = (volumeCurrent.clientHeight - clickOffsetY);
 
-    if (currentVolume === 0) {
-        if (volumeIcon.getAttribute('volume-data') == 'large')
-        volumeIcon.classList.replace('bx-volume-full','bx-volume-mute' );
-
-        else if (volumeIcon.getAttribute('volume-data') == 'medium')
-        volumeIcon.classList.replace('bx-volume-low','bx-volume-mute' )
-        else volumeIcon.classList.replace('bx-volume-low','bx-volume-mute' )
-        volumeIcon.setAttribute('volume-data', 'muted')
-    }
-
-    if (currentVolume / volumeHeight < 0.6) {
-        if (volumeIcon.getAttribute('volume-data') == 'large'){
-            console.log("me")
-            volumeIcon.classList.replace('bx-volume-full','bx-volume-low' );
-        }
-
-        else if (volumeIcon.getAttribute('volume-data') == 'medium')
-        volumeIcon.classList.replace('bx-volume-low','bx-volume-low' )
-        else volumeIcon.classList.replace('bx-volume-mute','bx-volume-low' );
-        volumeIcon.setAttribute('volume-data', 'medium')
-    }
-
-    if (currentVolume / volumeHeight >= 0.8) {
-        if (volumeIcon.getAttribute('volume-data') == 'large')
-        volumeIcon.classList.replace('bx-volume-full','bx-volume-full' );
-
-        else if (volumeIcon.getAttribute('volume-data') == 'medium')
-        volumeIcon.classList.replace('bx-volume-low','bx-volume-full' )
-        else volumeIcon.classList.replace('bx-volume-mute','bx-volume-full' )
-        volumeIcon.setAttribute('volume-data', 'large')
-    }
-
+    changeVolumeIcon(currentVolume / volumeHeight);
     volumeCurrent.style.height = currentVolume + 'px';
     localStorage.setItem('volumeCurrent', currentVolume);
     
     mainAudio.volume = currentVolume / volumeHeight;
-    
-    
 })
 
 volumeIcon.addEventListener('click', () => {
     if (volumeIcon.getAttribute('volume-data') !== 'muted') {
         mainAudio.volume = 0;
-        volumeIcon.classList.replace('bx-volume-full','bx-volume-mute' );
-        volumeIcon.classList.replace('bx-volume-low','bx-volume-mute' );
+        changeVolumeIcon(0);
         volumeCurrent.style.height = '0px';
-        volumeIcon.setAttribute('volume-data', 'muted')
     }
     else {
-        mainAudio.volume = 1;
-        volumeIcon.classList.replace('bx-volume-mute','bx-volume-full' );
-       
-        volumeCurrent.style.height = '60px';
-        volumeIcon.setAttribute('volume-data', 'large')
+        let currVolume = localStorage.getItem('volumeCurrent') ? localStorage.getItem('volumeCurrent') : volumeContainer.clientHeight;
+        let volume = currVolume / volumeContainer.clientHeight;
+        changeVolumeIcon(volume);
+        mainAudio.volume = volume;
+        volumeCurrent.style.height = currVolume + 'px';
+
     }
     
 });
@@ -355,3 +326,47 @@ function getVolumeData(value) {
     if (value / volumeContainer.clientHeight < 0.6) return 'medium';
     return 'large';
 }
+
+function getVolumeIconClass(volumeData) {
+    switch (volumeData) {
+        case 'muted': 
+            return 'bx-volume-mute';
+        case 'medium' : 
+            return 'bx-volume-low';
+        default: 
+            return 'bx-volume-full';
+    }
+}
+
+function changeVolumeIcon(volumeValue) {
+    if (volumeValue == 0) {
+        volumeIcon.classList.replace(getVolumeIconClass(volumeIcon.getAttribute('volume-data')), 'bx-volume-mute' );
+        volumeIcon.setAttribute('volume-data', 'muted');
+        return;
+    }
+
+    if (volumeValue < 0.6) {
+        volumeIcon.classList.replace(getVolumeIconClass(volumeIcon.getAttribute('volume-data')),'bx-volume-low' );
+        volumeIcon.setAttribute('volume-data', 'medium');
+        return;
+    }
+
+    if (volumeValue >= 0.6) {
+        volumeIcon.classList.replace(getVolumeIconClass(volumeIcon.getAttribute('volume-data')),'bx-volume-full' );
+        volumeIcon.setAttribute('volume-data', 'large');
+    }
+}
+
+progressContainer.addEventListener('mousemove', (e) => {
+    let progressWidth = progressContainer.clientWidth;
+    let clickOffsetX = e.offsetX;
+    let songDuration = mainAudio.duration;
+    if (e.target === progressContainer || e.target == progressBar) {
+        let tooltipTime = (clickOffsetX / progressWidth) * songDuration;
+        let tooltipMin = Math.floor(tooltipTime / 60);
+        let tooltipSec = Math.floor(tooltipTime % 60);
+        tooltipSec = tooltipSec < 10 ? '0' + tooltipSec: tooltipSec;
+        tooltip.style.left = (clickOffsetX / progressWidth)*100 + '%';
+        tooltip.innerText = `${tooltipMin}:${tooltipSec}`
+    }
+})

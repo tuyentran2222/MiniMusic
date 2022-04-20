@@ -97,7 +97,6 @@ function renderSong() {
 
 }
 window.addEventListener("loaded", ()=>{
-    console.log(musicIndex)
     loadMusic(musicIndex);
     playMusic();
     playingSong(); 
@@ -118,7 +117,7 @@ let intervalAction;
 function playMusic(){
     wrapper.classList.add("paused");
     if (playPauseBtn.classList.contains('bx-play')) playPauseBtn.classList.replace('bx-play', 'bx-pause')
-    //playPauseBtn.querySelector("i").innerText = "pause";
+    clearInterval(intervalAction);
     intervalAction = setInterval(()=>{
         currentRotate = getComputedStyle(musicImg).getPropertyValue('--deg');
         currentRotateNumber = currentRotate.slice(0, currentRotate.length - 3);
@@ -234,7 +233,6 @@ function playingSong() {
 }
 
 function clicked(element){
-    console.log(element);
     clearInterval(intervalAction);
     let getLiIndex = element.getAttribute("li-index");
     musicIndex = getLiIndex; //updating current song index with clicked li index
